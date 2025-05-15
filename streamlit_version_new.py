@@ -8,7 +8,7 @@ import platform
 os_type = platform.system()
 
 # Securely initialize OpenAI API Key using environment variable
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = os.getenv("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")
 
 # Before running your app, set the API key in your terminal:
 # export OPENAI_API_KEY='sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
