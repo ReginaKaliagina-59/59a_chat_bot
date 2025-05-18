@@ -58,7 +58,7 @@ if user_input:
     # ✅ New OpenAI API call
     try:
         response = openai.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4.1-mini",
             prompt=f"Here is the dataset:\n\n{context}\n\nQuestion: {user_input}\nAnswer:",
             temperature=0.5,
             max_tokens=200
