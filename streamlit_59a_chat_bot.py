@@ -3,6 +3,32 @@ import pandas as pd
 import openai
 import os
 import platform
+import pickle
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+
+
+# --- Find most relevant chunks ---
+def get_top_chunks(query, top_k=3):
+    query_embed = openai.embeddings.create(
+        model=EMBED_MODEL,
+        input=query
+    ).data[0].embedding
+
+    similarities = cosine_similarity([query_embed], embeddings)[0]
+    top_indices = np.argsort(similarities)[-top_k:][::-1]
+    return [chunks[i] for i in top_indices]
+
+# --- Ask GPT ---
+def ask_gpt(context, question):
+    prompt = f"Here is some data:\n\n{context}\n\nQuestion: {question}\nAnswer:"
+    response = openai.chat.completions.create(
+        model=GPT_MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0,
+        max_tokens=300
+    )
+    return response.choices[0].message.content
 
 # 🔍 Detect the OS type
 os_type = platform.system()
@@ -37,36 +63,39 @@ st.title("Chatbot")
 # Load the dataset directly
 dataset_path = "output_Monday_BI_data.csv"  # Provide full path if not in the same folder
 
+EMBED_PATH = "output_Monday_BI_data_full.pkl"
+CHUNK_SIZE = 5  # number of rows per chunk
+EMBED_MODEL = "text-embedding-3-small"
+GPT_MODEL = "gpt-3.5-turbo"
+
+chunks = []
+embeddings = []
+
 try:
-    df = pd.read_csv(dataset_path, encoding='ISO-8859-1')
+    # df = pd.read_csv(dataset_path, encoding='ISO-8859-1')
+    # Load chunks and embeddings from disk
+    with open(EMBED_PATH, "rb") as f:
+        chunks, embeddings = pickle.load(f)
+
     st.success("Dataset Loaded Successfully!")
-    st.dataframe(df.head())  # Display the first 5 rows of the dataset
+    # st.dataframe(df.head())  # Display the first 5 rows of the dataset
 except FileNotFoundError:
-    st.error(f"Dataset not found at path: {dataset_path}")
+    st.error(f"Dataset not found at path: {EMBED_PATH}")
     st.stop()
 except Exception as e:
     st.error(f"An error occurred while reading the file: {e}")
     st.stop()
 
 # User input
-user_input = st.text_input("Ask a question about your dataset:")
+question = st.text_input("Ask a question about your dataset:")
 
-if user_input:
-    # Prepare the context for the LLM
-    context = df.to_string(index=False)
-
-    # ✅ New OpenAI API call
+if question:
     try:
-        response = openai.completions.create(
-            model="gpt-4.1-mini",
-            prompt=f"Here is the dataset:\n\n{context}\n\nQuestion: {user_input}\nAnswer:",
-            temperature=0.5,
-            max_tokens=200
-        )
+        top_chunks = get_top_chunks(question)
+        context = "\n\n".join(top_chunks)
+        answer = ask_gpt(context, question)
 
-        # Extract and display the response
-        bot_response = response['choices'][0]['text']
-        st.write("**Bot:**", bot_response)
+        st.write("**Bot:**", answer)
 
     except Exception as e:
         st.error(f"An error occurred during OpenAI request: {e}")
