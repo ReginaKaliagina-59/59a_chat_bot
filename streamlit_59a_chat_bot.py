@@ -51,6 +51,17 @@ def set_background(image_path):
         unsafe_allow_html=True
     )
 
+    st.markdown(
+        """
+        <style>
+        .stApp {
+            color: white;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
 
 
 
