@@ -5,9 +5,11 @@ import os
 import platform
 import pickle
 import numpy as np
+import base64
 from sklearn.metrics.pairwise import cosine_similarity
 
 LOGO = "images/logo_01.png"
+BACKGROUND = "images/background_01.png"
 
 # --- Find most relevant chunks ---
 def get_top_chunks(query, top_k=3):
@@ -30,6 +32,27 @@ def ask_gpt(context, question):
         max_tokens=300
     )
     return response.choices[0].message.content
+
+def get_base64(file_path):
+    with open(file_path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+def set_background(image_path):
+    base64_img = get_base64(image_path)
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: url("data:image/png;base64,{base64_img}");
+            background-size: cover;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+
 
 # 🔍 Detect the OS type
 os_type = platform.system()
@@ -61,6 +84,7 @@ if not openai.api_key:
 # Title of the app
 st.title("59AI")
 st.logo(LOGO, icon_image=LOGO)
+set_background(BACKGROUND)
 
 # Load the dataset directly
 dataset_path = "output_Monday_BI_data.csv"  # Provide full path if not in the same folder
