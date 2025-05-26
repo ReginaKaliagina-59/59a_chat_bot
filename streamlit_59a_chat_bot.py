@@ -7,6 +7,7 @@ import pickle
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
+LOGO = "images/logo_01.png"
 
 # --- Find most relevant chunks ---
 def get_top_chunks(query, top_k=3):
@@ -58,7 +59,8 @@ if not openai.api_key:
         st.stop()
 
 # Title of the app
-st.title("Chatbot")
+st.title("59AI")
+st.logo(LOGO, icon_image=LOGO)
 
 # Load the dataset directly
 dataset_path = "output_Monday_BI_data.csv"  # Provide full path if not in the same folder
